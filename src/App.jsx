@@ -1,5 +1,5 @@
 import "./App.css";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Userpill from "./components/Userpill";
 
 function App() {
@@ -11,22 +11,32 @@ function App() {
 
   const [selectedUserSet, setSelectedUserSet] = useState(new Set());
 
-  useEffect(() => {
-    const fetchUsers = () => {
-      if (searchTerm?.trim() === "") {
-        setSuggestions([]);
-        return;
-      }
-
-      fetch(`https://dummyjson.com/users/search?q=${searchTerm}`)
-        .then((res) => res.json())
-        .then((data) => setSuggestions(data))
-        .catch((err) => {
-          console.log(err);
-        });
+  const debounceFn = (fn, delay) => {
+    let timer;
+    let context;
+    return (...args) => {
+      context = this;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        fn.apply(context, args);
+      }, delay);
     };
-    fetchUsers();
-  }, [searchTerm]);
+  };
+
+  const fetchUsers = () => {
+    if (searchTerm?.trim() === "") {
+      setSuggestions([]);
+      return;
+    }
+
+    fetch(`https://dummyjson.com/users/search?q=${searchTerm}`)
+      .then((res) => res.json())
+      .then((data) => setSuggestions(data))
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+  useEffect(() => debounceFn(fetchUsers, 1000), [searchTerm]);
 
   const handleSelectUser = (user) => {
     setSelectedUsers([...selectedUsers, user]);
@@ -43,15 +53,19 @@ function App() {
     const updateUsersEmails = new Set(selectedUserSet);
     updateUsersEmails.delete(user.email);
     setSelectedUserSet(updateUsersEmails);
-  }
+  };
 
   const handleKeyDown = (e) => {
-    if(e.key === 'Backspace' && e.target.value === "" && selectedUsers.length > 0) {
+    if (
+      e.key === "Backspace" &&
+      e.target.value === "" &&
+      selectedUsers.length > 0
+    ) {
       const lastUser = selectedUsers.pop();
       handleRemoveUser(lastUser);
       setSuggestions([]);
-    } 
-  }
+    }
+  };
 
   return (
     <div className="search-container">
