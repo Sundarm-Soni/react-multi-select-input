@@ -1,10 +1,13 @@
 import "./App.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Userpill from "./components/Userpill";
 
 function App() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [selectedUser, setSelectedUser] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+
+  const inputRef = useRef(null);
 
   const [selectedUserSet, setSelectedUserSet] = useState(new Set());
 
@@ -26,34 +29,68 @@ function App() {
   }, [searchTerm]);
 
   const handleSelectUser = (user) => {
-    setSelectedUser([...selectedUser, user]);
+    setSelectedUsers([...selectedUsers, user]);
     setSearchTerm("");
     setSelectedUserSet(new Set([...selectedUserSet, user.email]));
     setSuggestions([]);
+    inputRef.current.focus();
+  };
+
+  const handleRemoveUser = (user) => {
+    const filteredUsers = selectedUsers.filter((suser) => suser.id !== user.id);
+    setSelectedUsers(filteredUsers);
+
+    const updateUsersEmails = new Set(selectedUserSet);
+    updateUsersEmails.delete(user.email);
+    setSelectedUserSet(updateUsersEmails);
+  }
+
+  const handleKeyDown = (e) => {
+    if(e.key === 'Backspace' && e.target.value === "" && selectedUsers.length > 0) {
+      const lastUser = selectedUsers.pop();
+      handleRemoveUser(lastUser);
+      setSuggestions([]);
+    } 
   }
 
   return (
     <div className="search-container">
       <div className="search-input">
+        {selectedUsers.map((user) => {
+          return (
+            <Userpill
+              key={user.email}
+              image={user.image}
+              text={`${user.firstName} ${user.lastName}`}
+              onPillClick={() => handleRemoveUser(user)}
+            />
+          );
+        })}
         <div>
           <input
             type="text"
             value={searchTerm}
+            ref={inputRef}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search user"
+            placeholder="Search user..."
+            onKeyDown={handleKeyDown}
           />
-          <ul className="suggestions-list">{
-            suggestions?.users?.map((user) => !selectedUserSet.has(user.email) ? (
-              <li key={user.email} onClick={handleSelectUser}>
-                <img src={user.image} alt={`${user.firstName} ${user.lastName}`}/>
-              <span>
-                {user.firstName} {user.lastName}
-              </span>
-              </li>
-            ) : (<>
-
-            </>))
-          }
+          <ul className="suggestions-list">
+            {suggestions?.users?.map((user) =>
+              !selectedUserSet.has(user.email) ? (
+                <li key={user.email} onClick={() => handleSelectUser(user)}>
+                  <img
+                    src={user.image}
+                    alt={`${user.firstName} ${user.lastName}`}
+                  />
+                  <span>
+                    {user.firstName} {user.lastName}
+                  </span>
+                </li>
+              ) : (
+                <></>
+              )
+            )}
           </ul>
         </div>
       </div>

@@ -11,10 +11,12 @@ body {
 .search-container {
   display: flex;
   position: relative;
+  justify-content: center;
+  top: 200px;
 }
 
 .search-input {
-  width: 100%;
+  width: auto;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -40,7 +42,6 @@ body {
   margin: 0;
   position: absolute;
   background-color: #fff;
-  border: 1px solid #ccc;
 }
 
 .suggestions-list li {
@@ -53,4 +54,20 @@ body {
 
 .suggestions-list li img {
   height: 20px;
+}
+
+.user-pill {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: black;
+  color: #fff;
+  padding: 5px  10px;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.user-pill img {
+  height: 100%;
 }
